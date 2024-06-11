@@ -16,11 +16,10 @@ namespace Selenium
             {
                 driver.Navigate().GoToUrl("https://mercantec-ghc.github.io/MAGS-Banko/");
 
-                for (var i = 100; i < 20000; i++)
+                for (var i = 291; i < 20000; i++)
                 {
-                    GeneratePlate($"Gustav{i}");
-                }
-           
+                    GeneratePlate($"Johannes{i}");
+                }          
             }
             catch (WebDriverException e)
             {
@@ -44,7 +43,7 @@ namespace Selenium
                 IWebElement buttonElement = driver.FindElement(By.Id("knap"));
                 buttonElement.Click();
 
-                System.Threading.Thread.Sleep(500);
+                Thread.Sleep(2000);
 
                 var tdElements = driver.FindElements(By.TagName("td"));
 
