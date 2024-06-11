@@ -1,10 +1,16 @@
-﻿namespace BankoCheater
+﻿using Newtonsoft.Json;
+
+
+namespace BankoCheater
 {
     internal class Program
     {
         static void Main(string[] args)
         {
             string gamestate = "1Row";
+
+            string json = File.ReadAllText("C:\\Users\\MAGS\\Documents\\GitHub\\banko-MAGS-GH\\Selenium\\data.json");
+            var platesData = JsonConvert.DeserializeObject<List<Plade>>(json);
 
             List<Plade> plates = new List<Plade>();
 
@@ -35,6 +41,16 @@
                 new List<int> { 15, 26, 34, 72, 84 },
                 new List<int> { 35, 49, 57, 68, 85 }
                 ));
+
+            foreach (var plateData in platesData)
+            {
+                plates.Add(new Plade(
+                    plateData.Id,
+                    plateData.Row1,
+                    plateData.Row2,
+                    plateData.Row3
+                ));
+            }
 
             DrawNumber("Please enter a number:");
 

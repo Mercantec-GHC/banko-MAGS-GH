@@ -16,7 +16,10 @@ namespace Selenium
             {
                 driver.Navigate().GoToUrl("https://mercantec-ghc.github.io/MAGS-Banko/");
 
-                GeneratePlate("MAGS");
+                for (var i = 100; i < 20000; i++)
+                {
+                    GeneratePlate($"Gustav{i}");
+                }
            
             }
             catch (WebDriverException e)
@@ -35,12 +38,13 @@ namespace Selenium
             void GeneratePlate(string plateId)
             {
                 IWebElement inputElement = driver.FindElement(By.Id("tekstboks"));
+                inputElement.Clear();
                 inputElement.SendKeys(plateId);
 
                 IWebElement buttonElement = driver.FindElement(By.Id("knap"));
                 buttonElement.Click();
 
-                System.Threading.Thread.Sleep(100);
+                System.Threading.Thread.Sleep(500);
 
                 var tdElements = driver.FindElements(By.TagName("td"));
 
@@ -65,15 +69,37 @@ namespace Selenium
 
                 Data data = new Data
                 {
-                    InputText = plateId,
+                    Id = plateId,
                     Row1 = row1,
                     Row2 = row2,
                     Row3 = row3
                 };
 
-                string jsonString = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
 
                 string filePath = "C:\\Users\\MAGS\\Documents\\GitHub\\banko-MAGS-GH\\Selenium\\data.json";
+                
+                List<Data> dataList;
+                if (File.Exists(filePath))
+                {
+                    string existingJson = File.ReadAllText(filePath);
+                    if (string.IsNullOrEmpty(existingJson))
+                    {
+                        dataList = new List<Data>();
+                    }
+                    else
+                    {
+                        dataList = JsonSerializer.Deserialize<List<Data>>(existingJson);
+                    }
+                }
+                else
+                {
+                    dataList = new List<Data>();
+                }
+
+                dataList.Add(data);
+
+                string jsonString = JsonSerializer.Serialize(dataList, new JsonSerializerOptions { WriteIndented = true });
+
                 File.WriteAllText(filePath, jsonString);
 
                 Console.WriteLine($"Data has been written to {filePath}");
@@ -83,7 +109,7 @@ namespace Selenium
         public class Data
         {
 
-            public string InputText { get; set; }
+            public string Id { get; set; }
             public List<int> Row1 { get; set; }
             public List<int> Row2 { get; set; }
             public List<int> Row3 { get; set; }
