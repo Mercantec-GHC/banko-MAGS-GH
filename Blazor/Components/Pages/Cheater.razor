@@ -1,0 +1,194 @@
+﻿@page "/Cheater"
+@inject Blazor.Services.BankoService BankoService
+
+<div class="container p-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-primary">Banko Cheater</h2>
+            <button @onclick="RestartGame" class="btn btn-danger float-right">
+                <i class="oi oi-reload mr-1"></i> Genstart Spil
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="mb-0">Antal Plader i Spil</h4>
+                    <div class="display-4 font-weight-bold text-primary">@totalPlates</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h4 class="mb-0">Nuværende Spillefase</h4>
+                    <div class="display-4 font-weight-bold text-success">@currentGameState</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h4 class="mb-0">Tættest På at Vinde</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Plade ID</th>
+                                    <th>Manglende Tal</th>
+                                    <th>Næste Gevinst</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var plate in closestToWinning)
+                                {
+                                    <tr>
+                                        <td><strong>@plate.Id</strong></td>
+                                        <td>@plate.RemainingNumbers</td>
+                                        <td>@plate.Type</td>
+                                    </tr>
+                                }
+                                @if (!closestToWinning.Any())
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-center">Ingen plader er tæt på at vinde endnu.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="row mb-3">
+            <div class="col">
+                <div class="alert alert-success">
+                    @message
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Træk et nummer</h4>
+                </div>
+                <div class="card-body">
+                    <div class="input-group">
+                        <input @bind="drawnNumber" class="form-control" placeholder="Indtast et nummer (1-90)" type="number" min="1" max="90" />
+                        <div class="input-group-append">
+                            <button @onclick="DrawNumber" class="btn btn-primary">Træk</button>
+                            <button @onclick="DrawRandomNumber" class="btn btn-success">Træk tilfældig</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Allerede trukne numre</h4>
+                    <span class="badge badge-pill badge-primary">@drawnNumbers.Count</span>
+                </div>
+                <div class="card-body">
+                    <div class="drawn-numbers">
+                        @foreach (var number in drawnNumbers.OrderBy(n => n))
+                        {
+                            <span class="drawn-number">@number</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .drawn-numbers {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .drawn-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+    }
+</style>
+
+@code {
+    private int drawnNumber;
+    private string message;
+    private List<int> drawnNumbers = new List<int>();
+    private int totalPlates;
+    private string currentGameState;
+    private List<(string Id, int RemainingNumbers, string Type)> closestToWinning = new();
+    private Random random = new Random();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await BankoService.InitializeGameAsync("C:\\Users\\MAGS\\Documents\\GitHub\\banko-MAGS-GH\\Selenium\\data.json");
+        drawnNumbers = BankoService.GetDrawnNumbers();
+        totalPlates = BankoService.GetTotalPlateCount();
+        currentGameState = BankoService.GetCurrentGameState();
+        closestToWinning = BankoService.GetClosestToWinning();
+    }
+
+    private void DrawNumber()
+    {
+        string result = BankoService.DrawNumber(drawnNumber);
+        if (!string.IsNullOrEmpty(result))
+        {
+            message = result;
+        }
+        drawnNumbers = BankoService.GetDrawnNumbers();
+        currentGameState = BankoService.GetCurrentGameState();
+        closestToWinning = BankoService.GetClosestToWinning();
+    }
+
+    private void DrawRandomNumber()
+    {
+        // Generate number between 1-90 (inclusive)
+        int randomNumber;
+        do {
+            randomNumber = random.Next(1, 91); // Next(1, 91) gives values from 1 to 90 inclusive
+        } while (drawnNumbers.Contains(randomNumber)); // Ensure we get a number that hasn't been drawn yet
+        
+        drawnNumber = randomNumber;
+        DrawNumber();
+    }
+
+    private void RestartGame()
+    {
+        // Use the service's RestartGame method
+        BankoService.RestartGame();
+        
+        // Reset UI state
+        drawnNumbers = BankoService.GetDrawnNumbers();
+        currentGameState = BankoService.GetCurrentGameState();
+        closestToWinning = BankoService.GetClosestToWinning();
+        message = "Spillet er blevet genstartet!";
+    }
+}
+

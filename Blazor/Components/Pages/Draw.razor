@@ -1,0 +1,264 @@
+﻿@page "/"
+@page "/Draw"
+@using System.Collections.Generic
+
+<div class="container">
+    <div class="header">
+        <button class="btn btn-primary pulse-animation" @onclick="DrawNumber">Træk Nummer</button>
+        <div class="newest-number">
+            @if (LastNumberDrawn != 0)
+            {
+                <div class="number-display">
+                    <span class="number-label">Seneste nummer</span>
+                    <span class="new-number">@LastNumberDrawn</span>
+                </div>
+            }
+            else
+            {
+                <div class="number-display">
+                    <span class="number-label">Seneste nummer</span>
+                    <span class="no-number">-</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="bingo-board">
+            @foreach (var number in numbersLeftShow)
+            {
+                <div class="number @(numbersDrawn.Contains(number) ? "drawn" : "")">@number</div>
+            }
+        </div>
+
+        <div class="history-panel">
+            <h4>Seneste træk</h4>
+            <div class="recent-numbers">
+                @{
+                    var recentNumbers = numbersDrawn.Skip(Math.Max(0, numbersDrawn.Count - 6)).ToList();
+                    for (int i = recentNumbers.Count - 1; i >= 0; i--)
+                    {
+                        var number = recentNumbers[i];
+                        var order = numbersDrawn.Count - (recentNumbers.Count - 1 - i);
+                        <div class="recent-number-item">
+                            <span class="recent-number">@number</span>
+                            <span class="recent-order">@order</span>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<int> numbersDrawn = new List<int>();
+    private List<int> numbersLeftShow = Enumerable.Range(1, 90).ToList();
+    private Random random = new Random();
+    private int LastNumberDrawn = 0;
+
+    private void DrawNumber()
+    {
+        if (numbersDrawn.Count < 90)
+        {
+            var numbersLeft = numbersLeftShow.Except(numbersDrawn).ToList();
+            int index = random.Next(numbersLeft.Count);
+            int drawnNumber = numbersLeft[index];
+            numbersDrawn.Add(drawnNumber);
+            LastNumberDrawn = drawnNumber;
+        }
+    }
+}
+
+<style>
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .newest-number {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .number-display {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .number-label {
+        font-size: 16px;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .new-number {
+        font-size: 48px;
+        font-weight: bold;
+        color: #007bff;
+        background-color: #e9f5ff;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    }
+
+    .no-number {
+        font-size: 48px;
+        color: #6c757d;
+    }
+
+    .main-content {
+        display: flex;
+        gap: 20px;
+    }
+
+    .bingo-board {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 10px;
+        flex: 1;
+    }
+
+    .number {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 50px;
+        background-color: #6c757d;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        border-radius: 5px;
+        transition: all 0.3s;
+    }
+
+    .number.drawn {
+        background-color: #28a745;
+        color: white;
+        transform: scale(0.95);
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+        }
+    }
+
+    .history-panel {
+        width: 180px;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        height: fit-content;
+    }
+
+    .history-panel h4 {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #343a40;
+    }
+
+    .recent-numbers {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .recent-number-item {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: fadeIn 0.5s;
+        margin: 0 auto;
+    }
+
+    .recent-number {
+        background-color: #28a745;
+        color: white;
+        font-weight: bold;
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .recent-order {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #007bff;
+        color: white;
+        font-size: 12px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+</style>

@@ -1,22 +1,13 @@
 (function (global, pool, math, width, chunks, digits, module, define, rngname) {
-  //
-  // The following constants are related to IEEE 754 limits.
-  //
   var startdenom = math.pow(width, chunks),
     significance = math.pow(2, digits),
     overflow = significance * 2,
     mask = width - 1,
     nodecrypto;
-
-  //
-  // seedrandom()
-  // This is the seedrandom function described above.
-  //
   var impl = (math["seed" + rngname] = function (seed, options, callback) {
     var key = [];
     options = options == true ? { entropy: true } : options || {};
 
-    // Flatten the seed string or build one from local entropy if needed.
     var shortseed = mixkey(
       flatten(
         options.entropy
@@ -29,19 +20,13 @@
       key
     );
 
-    // Use the seed to initialize an ARC4 generator.
     var arc4 = new ARC4(key);
 
-    // Mix the randomness into accumulated entropy.
     mixkey(tostring(arc4.S), pool);
 
-    // Calling convention: what to return as a function of prng, seed, is_math.
     return (
       options.pass ||
       callback ||
-      // If called as a method of Math (Math.seedrandom()), mutate Math.random
-      // because that is how seedrandom.js has worked since v1.0.  Otherwise,
-      // it is a newer calling convention, so return the prng directly.
       function (prng, seed, is_math_call) {
         if (is_math_call) {
           math[rngname] = prng;
@@ -49,8 +34,6 @@
         } else return prng;
       }
     )(
-      // This function returns a random double in [0, 1) that contains
-      // randomness in every bit of the mantissa of the IEEE 754 value.
       function () {
         var n = arc4.g(chunks), // Start with a numerator n < 2 ^ 48
           d = startdenom, //   and denominator d = 2 ^ 48.
@@ -216,12 +199,6 @@
       return impl;
     });
   }
-
-  //
-  // Node.js native crypto support.
-  //
-
-  // End anonymous scope, and pass initial values.
 })(
   this, // global window object
   [], // pool: entropy pool starts empty
